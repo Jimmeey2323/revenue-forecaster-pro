@@ -5,13 +5,18 @@ import { ForecastTable } from "@/components/dashboard/ForecastTable";
 import { MemberRequirementsTable } from "@/components/dashboard/MemberRequirementsTable";
 import { MethodologySection } from "@/components/dashboard/MethodologySection";
 import { ScenarioComparison } from "@/components/dashboard/ScenarioComparison";
+import { HistoricConversionTable } from "@/components/dashboard/HistoricConversionTable";
+import { MembershipBreakdown } from "@/components/dashboard/MembershipBreakdown";
+import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { generateForecast, calculateMemberRequirements, getHistoricalStats, formatCurrency, ScenarioType } from "@/utils/forecasting";
 import { historicalData } from "@/data/historicalData";
+import { kwalityHouseConversion, supremeHQConversion, getConversionStats } from "@/data/conversionData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Building2, TrendingUp, Users, Target, IndianRupee, Calculator } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, TrendingUp, Users, Target, IndianRupee, Calculator, BarChart3, Percent } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -24,6 +29,10 @@ const Index = () => {
   const forecasts = generateForecast(scenario);
   const memberRequirements = calculateMemberRequirements(forecasts, avgTransactionValue, renewalPercentage);
   const historicalStats = getHistoricalStats();
+
+  // Get actual conversion stats
+  const kwalityStats = getConversionStats(kwalityHouseConversion);
+  const supremeStats = getConversionStats(supremeHQConversion);
 
   // Calculate 2025 total (excluding partial Dec)
   const total2025 = historicalData
@@ -90,16 +99,18 @@ const Index = () => {
             icon={<Users className="h-4 w-4" />}
           />
           <StatsCard
-            title="Leads Required (20%)"
-            value={totalLeadsLow.toLocaleString('en-IN')}
-            subtitle="at 20% conversion"
-            icon={<Target className="h-4 w-4" />}
+            title="Kwality Conversion Rate"
+            value={`${kwalityStats.overallConversionRate.toFixed(1)}%`}
+            trend={kwalityStats.conversionTrend}
+            subtitle="historical average"
+            icon={<Percent className="h-4 w-4" />}
           />
           <StatsCard
-            title="Leads Required (15%)"
-            value={totalLeadsHigh.toLocaleString('en-IN')}
-            subtitle="at 15% conversion"
-            icon={<Target className="h-4 w-4" />}
+            title="Supreme Conversion Rate"
+            value={`${supremeStats.overallConversionRate.toFixed(1)}%`}
+            trend={supremeStats.conversionTrend}
+            subtitle="historical average"
+            icon={<Percent className="h-4 w-4" />}
           />
         </div>
 
@@ -186,6 +197,45 @@ const Index = () => {
           requirements={memberRequirements} 
           avgTransactionValue={avgTransactionValue}
         />
+
+        {/* Membership Breakdown */}
+        <MembershipBreakdown forecasts={forecasts} renewalPercentage={renewalPercentage} />
+
+        <Separator />
+
+        {/* Historic Conversion Data */}
+        <div>
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <BarChart3 className="h-6 w-6" />
+            Historical Conversion Data
+          </h2>
+          <Tabs defaultValue="kwality" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="kwality">Kwality House (Mumbai)</TabsTrigger>
+              <TabsTrigger value="supreme">Supreme HQ (Mumbai)</TabsTrigger>
+            </TabsList>
+            <TabsContent value="kwality">
+              <HistoricConversionTable 
+                data={kwalityHouseConversion} 
+                location="Kwality House, Kemps Corner" 
+              />
+            </TabsContent>
+            <TabsContent value="supreme">
+              <HistoricConversionTable 
+                data={supremeHQConversion} 
+                location="Supreme HQ, Bandra" 
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <Separator />
+
+        {/* Insights Section */}
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Deep Insights & Recommendations</h2>
+          <InsightsSection />
+        </div>
 
         {/* Methodology */}
         <MethodologySection />
